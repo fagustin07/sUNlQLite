@@ -8,7 +8,7 @@ class Page:
         self.decoder = Decoder()
 
     def can_insert_record(self):
-        return (self.__max_bytes() - self.__next_byte()) > 0
+        return self.__max_bytes() > self.__next_max_byte()
 
     def insert(self, record):
         self.records[self.__next_byte():self.__next_byte() + self.record_size()] = record
@@ -27,12 +27,17 @@ class Page:
             records.append(record)
 
             curr_record += 1
-
+        print(len(records))
+        print(self.__next_byte())
+        print(self.__next_max_byte())
         return records
 
     # PRIVATE
     def __next_byte(self):
-        return self.amount_record * 291
+        return self.amount_record * self.record_size()
+
+    def __next_max_byte(self):
+        return self.amount_record * self.record_size() + self.record_size()
 
     @staticmethod
     def __max_bytes():
