@@ -1,9 +1,7 @@
-from abc import ABC, abstractmethod
-
-from modules.vm import VirtualMachine
+from abc import abstractmethod
 
 
 class Command:
     @abstractmethod
-    def do(self, vm: VirtualMachine):
+    def do(self, vm):
         pass

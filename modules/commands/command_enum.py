@@ -8,5 +8,5 @@ class EnumCommand(Enum):
 
     # meta-commands
     EXIT = ".EXIT"
-
+    METADATA = ".METADATA"
     EXCEPTION = "EXCEPTION"

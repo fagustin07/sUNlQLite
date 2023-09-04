@@ -1,6 +1,6 @@
 from modules.commands.command import Command
 
 
-class InvalidCommand(Command):
+class Metadata(Command):
     def do(self, vm):
-        print('Operación inválida')
+        vm.metadata()
