@@ -5,7 +5,10 @@ class CommandValidator:
 
     @staticmethod
     def command_string(split_entry):
-        return split_entry[0].upper()
+        if len(split_entry) > 0:
+            return split_entry[0].upper()
+        else:
+            return ""
 
     def do_for_select(self, split_entry):
         return self.__is_invalid_select_command(split_entry)

@@ -1,3 +1,4 @@
+from modules.commands.blank import Blank
 from modules.commands.command_enum import EnumCommand
 from modules.commands.command_validator import CommandValidator
 from modules.commands.exit import Exit
@@ -34,5 +35,7 @@ class Compiler:
             return Exit()
         elif command_string == EnumCommand.METADATA.value:
             return Metadata()
+        elif command_string == EnumCommand.BLANK.value:
+            return Blank()
         else:
             return InvalidCommand()
