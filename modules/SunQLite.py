@@ -6,7 +6,7 @@ class SunQLite:
     def __init__(self):
         self.compiler = Compiler()
         self.keep_running = True
-        self.table = Table("user")
+        self.table = Table('user')
 
     def start(self):
         command_global = None
@@ -16,19 +16,18 @@ class SunQLite:
             try:
                 command_global = self.compiler.do(user_input)
             except Exception as e:
-                # TODO: pasar comillas dobles a simples x convencion Python
-                print("Se produjo un error en compilación")
+                print('Se produjo un error en compilación')
                 raise e
 
             try:
                 command_global.do(self)
             except Exception as e:
-                print("Se produjo un error en ejecución")
+                print('Se produjo un error en ejecución')
                 raise e
 
     def insert(self, record):
         self.table.insert(record)
-        print("INSERT exitoso")
+        print('INSERT exitoso')
 
     def select(self):
         for record in self.table.select():
