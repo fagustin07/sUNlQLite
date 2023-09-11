@@ -2,10 +2,11 @@ from modules.decoder import Decoder
 
 
 class Page:
-    def __init__(self):
+    def __init__(self, data):
         self.records = bytearray(self.__max_bytes())
-        self.amount_record = 0
         self.decoder = Decoder()
+        self.records[0:len(data)] = data
+        self.amount_record = int(len(data)/291)
 
     def can_insert_record(self):
         return self.__max_bytes() > self.__next_max_byte()
@@ -27,9 +28,6 @@ class Page:
             records.append(record)
 
             curr_record += 1
-        print(len(records))
-        print(self.__next_byte())
-        print(self.__next_max_byte())
         return records
 
     # PRIVATE

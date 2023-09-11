@@ -1,35 +1,28 @@
 from modules.decoder import Decoder
-from modules.page import Page
+from modules.pager import Pager
 
 
 class Table:
-    def __init__(self, name):
+    def __init__(self, name, data_file):
         self.name = name
         self.decoder = Decoder()
-        self.pages = []
-        fst_page = Page()
-        self.pages.append(fst_page)
-        self.current_page: Page = fst_page
-        self.amount_pages = 1
-        self.amount_records = 0
+        self.pager = Pager(data_file)
 
     def insert(self, record):
-        if not self.current_page.can_insert_record():
-            new_page = Page()
-            self.pages.append(new_page)
-            self.current_page = new_page
-            self.amount_pages += 1
-
-        self.current_page.insert(record)
-        self.amount_records += 1
+        curr_page = self.pager.page_to_write()
+        curr_page.insert(record)
+        self.pager.incr_record()
 
     def select(self):
         records = []
-        for page in self.pages:
+        for page in self.pager.all():
             for record in page.select():
                 records.append(record)
 
         return records
 
     def metadata(self):
-        return self.amount_pages, self.amount_records
+        return self.pager.metadata()
+
+    def commit(self):
+        self.pager.commit()

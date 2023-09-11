@@ -3,10 +3,10 @@ from modules.table import Table
 
 
 class SunQLite:
-    def __init__(self):
+    def __init__(self, data_file):
         self.compiler = Compiler()
         self.keep_running = True
-        self.table = Table('user')
+        self.table = Table('user', data_file)
 
     def start(self):
         command_global = None
@@ -34,6 +34,7 @@ class SunQLite:
             print(record[0], record[1], record[2])
 
     def finish(self):
+        self.table.commit()
         self.keep_running = False
 
     def metadata(self):
