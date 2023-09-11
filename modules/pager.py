@@ -68,12 +68,12 @@ class Pager:
                 data[curr_byte:curr_byte * page.amount_record * 291] = page.records[0:page.amount_record*291]
             else:
                 data[curr_byte:curr_byte * page.amount_record * 291] = page.records
-        print(len(data))
+            curr_byte += 4096
         self.file_manager.commit(data)
 
     def __load_all_data_in_cache(self):
         curr_page = 0
-        while curr_page < self.amount_pages-1:
+        while curr_page < self.amount_pages:
             page_obj = self.pages_dict.get(curr_page)
             if page_obj is None:
                 self.pages_dict[curr_page] = Page(self.file_manager.get_data(curr_page * 4096, (curr_page+1) * 4096))
