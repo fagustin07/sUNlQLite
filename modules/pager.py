@@ -61,14 +61,17 @@ class Pager:
         return self.pages_dict.values()
 
     def commit(self):
-        data = bytearray()
-        curr_byte = 0
-        for page in self.all():
-            if page.amount_record < 14:
-                data[curr_byte:curr_byte * page.amount_record * 291] = page.records[0:page.amount_record*291]
-            else:
-                data[curr_byte:curr_byte * page.amount_record * 291] = page.records
-            curr_byte += 4096
+        data = self.file_manager.file()
+        for page_kv in self.pages_dict.items():
+            page = page_kv[1]
+            offset = page_kv[0]
+            if page.have_changes:
+                curr_byte = self.__page_size() * offset
+                if page.amount_record < 14:
+                    records = page.records[0:page.amount_record * 291]
+                else:
+                    records = page.records
+                data[curr_byte:curr_byte + page.amount_record * 291] = records
         self.file_manager.commit(data)
 
     def __load_all_data_in_cache(self):
@@ -78,3 +81,13 @@ class Pager:
             if page_obj is None:
                 self.pages_dict[curr_page] = Page(self.file_manager.get_data(curr_page * 4096, (curr_page+1) * 4096))
             curr_page += 1
+        self.__sort_cache()
+
+    def __sort_cache(self):
+        keys = list(self.pages_dict.keys())
+        keys.sort()
+        self.pages_dict = {i: self.pages_dict[i] for i in keys}
+
+    @staticmethod
+    def __page_size():
+        return 4096

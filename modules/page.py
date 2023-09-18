@@ -7,6 +7,7 @@ class Page:
         self.decoder = Decoder()
         self.records[0:len(data)] = data
         self.amount_record = int(len(data)/291)
+        self.have_changes = False
 
     def can_insert_record(self):
         return self.__max_bytes() > self.__next_max_byte()
@@ -14,6 +15,7 @@ class Page:
     def insert(self, record):
         self.records[self.__next_byte():self.__next_byte() + self.record_size()] = record
         self.amount_record += 1
+        self.have_changes = True
 
     def select(self):
         if self.amount_record == 0:

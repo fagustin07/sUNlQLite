@@ -17,10 +17,6 @@ class FileManager:
             else:
                 amount_pages = tuple_amount_pages_records[0] + 1
                 amount_records = tuple_amount_pages_records[0] * 14 + divmod(tuple_amount_pages_records[1], 291)[0]
-        print(file_size)
-        print(tuple_amount_pages_records)
-
-        print(amount_pages, amount_records)
         return amount_pages, amount_records
 
     def get_data(self, since, to):
@@ -37,3 +33,8 @@ class FileManager:
     def commit(self, data):
         with open(self.filename, 'wb') as file:
             file.write(data)
+
+    def file(self):
+        with open(self.filename, 'rb') as file:
+            bytedata = bytearray(file.read())
+            return bytedata
