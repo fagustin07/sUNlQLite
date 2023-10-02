@@ -11,15 +11,9 @@ class Table:
     def insert(self, record):
         curr_page = self.pager.page_to_write()
         curr_page.insert(record)
-        self.pager.incr_record()
 
     def select(self):
-        records = []
-        for page in self.pager.all():
-            for record in page.select():
-                records.append(record)
-
-        return records
+        return self.pager.pages.data()
 
     def metadata(self):
         return self.pager.metadata()

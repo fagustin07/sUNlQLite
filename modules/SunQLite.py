@@ -1,4 +1,5 @@
 from modules.compiler import Compiler
+from modules.page_full_exception import PageFullException
 from modules.table import Table
 
 
@@ -21,6 +22,8 @@ class SunQLite:
 
             try:
                 command_global.do(self)
+            except PageFullException as e:
+                print('Split no implementado')
             except Exception as e:
                 print('Se produjo un error en ejecución')
                 raise e
