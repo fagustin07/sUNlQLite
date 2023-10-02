@@ -1,16 +1,25 @@
 class Encoder:
     @staticmethod
     def do(pk, username, email):
-        registro_codificado = bytearray(291)
+        codified_record = bytearray(291)
 
         id_bytes = pk.to_bytes(4, byteorder='big')
-        registro_codificado[:4] = id_bytes
+        codified_record[:4] = id_bytes
 
-        usuario_encoded = username.encode('ascii')
-        registro_codificado[4:36] = usuario_encoded.ljust(32, b'\x00')
+        username_encoded = username.encode('ascii')
+        codified_record[4:36] = username_encoded.ljust(32, b'\x00')
 
         email_encoded = email.encode('ascii')
-        registro_codificado[36:291] = email_encoded.ljust(255, b'\x00')
+        codified_record[36:291] = email_encoded.ljust(255, b'\x00')
 
-        return registro_codificado
+        return codified_record
 
+    def username_to_bytes(self, username):
+        data = bytearray(32)
+        data[0:32] = username.encode('ascii').ljust(32, b'\x00')
+        return data
+
+    def email_to_bytes(self, email):
+        data = bytearray(32)
+        data[0:255] = email.encode('ascii').ljust(255, b'\x00')
+        return data

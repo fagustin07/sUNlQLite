@@ -1,6 +1,7 @@
 from modules.compiler import Compiler
 from modules.exceptions.duplicate_key import DuplicateKeyException
 from modules.exceptions.page_full import PageFullException
+from modules.exceptions.record_not_found import RecordNotFoundException
 from modules.table import Table
 
 
@@ -18,16 +19,18 @@ class SunQLite:
             try:
                 command_global = self.compiler.do(user_input)
             except Exception as e:
-                print('Se produjo un error en compilación')
                 raise e
-
+            finally:
+                print('Se produjo un error en compilación')
             try:
                 command_global.do(self)
-            except PageFullException as e:
+            except PageFullException:
                 print('Split no implementado')
-            except DuplicateKeyException as e:
+            except DuplicateKeyException:
                 print('Clave duplicada')
-            except Exception as e:
+            except RecordNotFoundException:
+                print('Registro no encontrado')
+            except Exception:
                 print('Se produjo un error en ejecución')
 
     def insert(self, record):
