@@ -1,7 +1,6 @@
-import copy
-
 from modules.decoder import Decoder
-from modules.page_full_exception import PageFullException
+from modules.exceptions.duplicate_key import DuplicateKeyException
+from modules.exceptions.page_full import PageFullException
 
 
 class Node:
@@ -15,9 +14,13 @@ class Node:
 
     # ACTIONS
     def insert(self, data):
+        new_key = self.__decoder.bytes_to_int(list(data[:4]))
+
+        if self.__contains(new_key):
+            raise DuplicateKeyException()
+
         if self.num_records == 13:
             raise PageFullException()
-        new_key = self.__decoder.bytes_to_int(list(data[:4]))
         is_saved = False
         curr_record_index = 0
 
@@ -47,3 +50,6 @@ class Node:
 
     def records(self):
         return self.__records.copy()
+
+    def __contains(self, key):
+        return key in map(lambda kv: kv[0], self.__records)
