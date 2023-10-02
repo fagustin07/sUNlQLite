@@ -1,3 +1,5 @@
+import copy
+
 from modules.decoder import Decoder
 from modules.page_full_exception import PageFullException
 
@@ -36,8 +38,12 @@ class Node:
     def data(self):
         return list(map(lambda record_kv: self.__decoder.do(record_kv), self.__records)) if self.is_leaf else None
 
-    def count_pages(self):
+    @staticmethod
+    def count_pages():
         return 1
 
     def count_records(self):
         return self.num_records if self.is_root or self.is_leaf else 0
+
+    def records(self):
+        return self.__records.copy()

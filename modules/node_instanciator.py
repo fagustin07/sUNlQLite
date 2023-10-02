@@ -6,8 +6,8 @@ class NodeInstanciator:
     def init_tree(self, node_bytes):
         is_leaf = node_bytes[0] == 0
         is_root = node_bytes[1] == 0
-        parent = int.from_bytes(node_bytes[2:6])
-        num_records = int.from_bytes(node_bytes[6:10])
+        parent = int.from_bytes(node_bytes[2:6], byteorder='big') if int.from_bytes(node_bytes[2:6], byteorder='big') > 0 else None
+        num_records = int.from_bytes(node_bytes[6:10], byteorder='big')
 
         if num_records > 0:
             records = self.get_records(node_bytes[10:295 * num_records], num_records)
@@ -29,12 +29,12 @@ class NodeInstanciator:
         records = []
         curr_record = 0
 
-        while curr_record > num_records*295:
+        while curr_record < num_records*295:
             key_start_byte = curr_record
             value_start_byte = curr_record+4
             value_last_byte = value_start_byte + 291
 
-            key = bytes[key_start_byte:value_start_byte]
+            key = int.from_bytes(list(bytes[key_start_byte:value_start_byte]), byteorder='big')
             value = bytes[value_start_byte:value_last_byte]
             records.append([key, value])
 
