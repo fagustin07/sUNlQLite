@@ -1,4 +1,4 @@
-from modules.decoder import Decoder
+from utils.decoder import Decoder
 
 
 class Page:

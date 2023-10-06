@@ -1,5 +1,5 @@
-from modules.commands.command import Command
-from modules.encoder import Encoder
+from commands.command import Command
+from utils.encoder import Encoder
 
 
 class Insert(Command):

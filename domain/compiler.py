@@ -1,11 +1,11 @@
-from modules.commands.blank import Blank
-from modules.commands.command_enum import EnumCommand
-from modules.commands.command_validator import CommandValidator
-from modules.commands.exit import Exit
-from modules.commands.insert import Insert
-from modules.commands.invalid_command import InvalidCommand
-from modules.commands.metadata import Metadata
-from modules.commands.select import Select
+from commands.blank import Blank
+from commands.command_enum import EnumCommand
+from commands.command_validator import CommandValidator
+from commands.exit import Exit
+from commands.insert import Insert
+from exceptions.invalid_command import InvalidCommand
+from commands.metadata import Metadata
+from commands.select import Select
 
 
 class Compiler:

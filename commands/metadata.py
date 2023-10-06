@@ -1,4 +1,4 @@
-from modules.commands.command import Command
+from commands.command import Command
 
 
 class Metadata(Command):

@@ -1,4 +1,4 @@
-from modules.decoder import Decoder
+from utils.decoder import Decoder
 from modules.pager import Pager
 
 

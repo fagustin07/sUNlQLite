@@ -1,4 +1,4 @@
-from modules.encoder import Encoder
+from utils.encoder import Encoder
 
 
 class NodeEncoder:

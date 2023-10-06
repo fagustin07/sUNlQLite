@@ -1,5 +1,5 @@
-from modules.decoder import Decoder
-from modules.node import Node
+from utils.decoder import Decoder
+from btree.node import Node
 
 
 class NodeInstanciator:

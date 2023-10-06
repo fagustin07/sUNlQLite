@@ -1,7 +1,4 @@
 from modules.compiler import Compiler
-from modules.exceptions.duplicate_key import DuplicateKeyException
-from modules.exceptions.page_full import PageFullException
-from modules.exceptions.record_not_found import RecordNotFoundException
 from modules.table import Table
 
 

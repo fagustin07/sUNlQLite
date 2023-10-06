@@ -1,6 +1,6 @@
-from modules.file_manager import FileManager
-from modules.node_encoder import NodeEncoder
-from modules.node_instanciator import NodeInstanciator
+from utils.file_manager import FileManager
+from btree import NodeEncoder
+from btree import NodeInstanciator
 
 
 class Pager:
