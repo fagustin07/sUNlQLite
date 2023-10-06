@@ -16,25 +16,25 @@ class SunQLite:
 
         while self.keep_running:
             user_input = input("sql>")
-            try:
-                command_global = self.compiler.do(user_input)
-            except Exception as e:
-                raise e
-            finally:
-                print('Se produjo un error en compilación')
-            try:
-                command_global.do(self)
-            except PageFullException:
-                print('Split no implementado')
-            except DuplicateKeyException:
-                print('Clave duplicada')
-            except RecordNotFoundException:
-                print('Registro no encontrado')
-            except Exception:
-                print('Se produjo un error en ejecución')
+            # try:
+            command_global = self.compiler.do(user_input)
+            # except Exception as e:
+            #     raise e
+            # finally:
+            #     print('Se produjo un error en compilación')
+            # try:
+            command_global.do(self)
+            # except PageFullException:
+            #     print('Split no implementado')
+            # except DuplicateKeyException:
+            #     print('Clave duplicada')
+            # except RecordNotFoundException:
+            #     print('Registro no encontrado')
+            # except Exception:
+            #     print('Se produjo un error en ejecución')
 
-    def insert(self, record):
-        self.table.insert(record)
+    def insert(self, pk, username, email):
+        self.table.insert(pk, username, email)
         print('INSERT exitoso')
 
     def select(self):

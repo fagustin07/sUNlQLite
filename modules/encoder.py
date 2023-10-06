@@ -1,25 +1,24 @@
+from modules.node import EMAIL, USERNAME
+
+
 class Encoder:
     @staticmethod
-    def do(pk, username, email):
-        codified_record = bytearray(291)
+    def do(record_kv):
+        pk = record_kv[0]
+        username = record_kv[1][USERNAME]
+        email = record_kv[1][EMAIL]
+        codified_record = bytearray(295)
+
+        key_record_bytes = pk.to_bytes(4, byteorder='big')
+        codified_record[:4] = key_record_bytes
 
         id_bytes = pk.to_bytes(4, byteorder='big')
-        codified_record[:4] = id_bytes
+        codified_record[4:8] = id_bytes
 
         username_encoded = username.encode('ascii')
-        codified_record[4:36] = username_encoded.ljust(32, b'\x00')
+        codified_record[8:40] = username_encoded.ljust(32, b'\x00')
 
         email_encoded = email.encode('ascii')
-        codified_record[36:291] = email_encoded.ljust(255, b'\x00')
+        codified_record[40:295] = email_encoded.ljust(255, b'\x00')
 
         return codified_record
-
-    def username_to_bytes(self, username):
-        data = bytearray(32)
-        data[0:32] = username.encode('ascii').ljust(32, b'\x00')
-        return data
-
-    def email_to_bytes(self, email):
-        data = bytearray(32)
-        data[0:255] = email.encode('ascii').ljust(255, b'\x00')
-        return data

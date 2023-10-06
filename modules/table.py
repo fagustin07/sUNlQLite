@@ -8,9 +8,8 @@ class Table:
         self.decoder = Decoder()
         self.pager = Pager(data_file)
 
-    def insert(self, record):
-        curr_page = self.pager.page_to_write()
-        curr_page.insert(record)
+    def insert(self, pk, username, email):
+        self.pager.page_to_write().insert(pk, username, email)
 
     def select(self):
         return self.pager.pages.data()

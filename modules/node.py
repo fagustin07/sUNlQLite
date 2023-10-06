@@ -1,26 +1,25 @@
-from modules.decoder import Decoder
-from modules.encoder import Encoder
 from modules.exceptions.duplicate_key import DuplicateKeyException
 from modules.exceptions.page_full import PageFullException
 from modules.exceptions.record_not_found import RecordNotFoundException
 
 
+USERNAME = 0
+EMAIL = 1
+
+
 class Node:
-    # TODO: como iterar sobre la estructura actual?
-    def __init__(self, is_leaf, is_root, parent, num_records, records):
+    def __init__(self, is_leaf, is_root, parent, num_records, num_page, records):
         self.is_leaf = is_leaf
         self.is_root = is_root
         self.parent = parent
         self.num_records = num_records
         self.__records = records
-        self.__decoder = Decoder()
-        self.__encoder = Encoder()
+        self.num_page = num_page
 
     # ACTIONS
-    def insert(self, data):
-        new_key = self.__decoder.bytes_to_int(list(data[:4]))
+    def insert(self, pk, username, email):
 
-        if self.__contains(new_key):
+        if self.__contains(pk):
             raise DuplicateKeyException()
 
         if self.num_records == 13:
@@ -29,19 +28,19 @@ class Node:
         curr_record_index = 0
 
         while not is_saved and curr_record_index < self.num_records:
-            if new_key < self.__records[curr_record_index][0]:
-                self.__records.insert(curr_record_index, [new_key, data])
+            if pk < self.__records[curr_record_index][0]:
+                self.__records.insert(curr_record_index, [pk, [username, email]])
                 is_saved = True
             curr_record_index += 1
         if not is_saved:
-            self.__records.append([new_key, data])
+            self.__records.append([pk, [username, email]])
         self.num_records += 1
 
     def update_username(self, key, new_username):
-        self.__find_record(key)[4:36] = self.__encoder.username_to_bytes(new_username)
+        self.__find_record(key)[USERNAME] = new_username
 
     def update_email(self, key, new_email):
-        self.__find_record(key)[36:291] = self.__encoder.email_to_bytes(new_email)
+        self.__find_record(key)[EMAIL] = new_email
 
     def update_pk(self, key, new_key):
         if self.__contains(new_key):
@@ -50,27 +49,29 @@ class Node:
         self.__records.remove(record)
         self.__records -= 1
 
-        record[1][0:4] = new_key.to_bytes(4, byteorder='big')
-        self.insert(record[1])
+        self.insert(new_key, record[USERNAME], record[EMAIL])
 
     # ACCESING
     def get_record(self, key):
-        return self.__decoder.do(self.__find_record(key))
+        return self.__find_record(key)
 
     def get_email(self, key):
-        return self.__decoder.do(self.__find_record(key))[2]
+        return self.__find_record(key)[EMAIL]
 
     def get_username(self, key):
-        return self.__decoder.do(self.__find_record(key))[1]
+        return self.__find_record(key)[USERNAME]
 
     def get_pk(self, key):
-        return self.__decoder.do(self.__find_record(key))[0]
+        self.__find_record(key)
+        return key
 
     def obtain(self, i):
         return self
 
     def data(self):
-        return list(map(lambda record_kv: self.__decoder.do(record_kv), self.__records)) if self.is_leaf else None
+        return list(map(lambda record_kv:
+                        [record_kv[0], record_kv[1][USERNAME], record_kv[1][EMAIL]],
+                        self.__records)) if self.is_leaf else []
 
     @staticmethod
     def count_pages():
@@ -86,7 +87,7 @@ class Node:
         record = next(filter(lambda record_kv: record_kv[0] == key, self.__records), None)
 
         if record is not None:
-            return record
+            return record[1]
         else:
             raise RecordNotFoundException()
 
