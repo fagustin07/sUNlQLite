@@ -1,5 +1,5 @@
 from utils.decoder import Decoder
-from modules.pager import Pager
+from domain.pager import Pager
 
 
 class Table:

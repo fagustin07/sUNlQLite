@@ -1,5 +1,8 @@
-from modules.compiler import Compiler
-from modules.table import Table
+from domain.compiler import Compiler
+from domain.table import Table
+from exceptions.duplicate_key import DuplicateKeyException
+from exceptions.page_full import PageFullException
+from exceptions.record_not_found import RecordNotFoundException
 
 
 class SunQLite:
@@ -13,22 +16,20 @@ class SunQLite:
 
         while self.keep_running:
             user_input = input("sql>")
-            # try:
-            command_global = self.compiler.do(user_input)
-            # except Exception as e:
-            #     raise e
-            # finally:
-            #     print('Se produjo un error en compilación')
-            # try:
-            command_global.do(self)
-            # except PageFullException:
-            #     print('Split no implementado')
-            # except DuplicateKeyException:
-            #     print('Clave duplicada')
-            # except RecordNotFoundException:
-            #     print('Registro no encontrado')
-            # except Exception:
-            #     print('Se produjo un error en ejecución')
+            try:
+                command_global = self.compiler.do(user_input)
+            except Exception:
+                print('Se produjo un error en compilación')
+            try:
+                command_global.do(self)
+            except PageFullException:
+                print('Split de nodo interno no implementado')
+            except DuplicateKeyException:
+                print('Clave duplicada')
+            except RecordNotFoundException:
+                print('Registro no encontrado')
+            except Exception as e:
+                raise e
 
     def insert(self, pk, username, email):
         self.table.insert(pk, username, email)

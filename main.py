@@ -1,7 +1,7 @@
 import os
-
-from modules.SunQLite import SunQLite
 import sys
+
+from domain.SunQLite import SunQLite
 
 if len(sys.argv) < 2:
     print('Por favor ejecutar con el nombre del archivo de la DB')

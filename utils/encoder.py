@@ -1,4 +1,4 @@
-from btree import EMAIL, USERNAME
+from btree.node import USERNAME, EMAIL
 
 
 class Encoder:
