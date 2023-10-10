@@ -20,7 +20,7 @@ class TestNode(TestCase):
         self.assertEqual(node.get_email(pk1), 'rico')
         self.assertEqual(1, node.num_records)
 
-    def test_se_splitea_una_hoja(self):
+    def test_cuando_se_splitea_una_hoja_el_numrecords_pasa_a_ser_la_cantidad_de_hijos(self):
         pk1 = 10
         pk2 = 45
         pk3 = 1
@@ -31,7 +31,8 @@ class TestNode(TestCase):
         node.insert(pk3, 'fede3', 'rico3')
         node.insert(pk4, 'fede4', 'rico4')
 
-        self.assertEqual(0, node.num_records)
+        self.assertEqual(2, node.num_records)
+        self.assertEqual(1, len(node.subtrees))
 
     def test_obtener_cantidad_de_registros_desde_un_nodo_interno(self):
         pk1 = 10

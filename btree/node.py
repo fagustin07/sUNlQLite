@@ -29,7 +29,7 @@ class Node:
 
         if self.is_leaf:
             if self.num_records == self.__max_records_amount:
-                self.__split_leaf_root(pk, username, email)
+                self.__split_leaf(pk, username, email)
             else:
                 self.__do_insert(pk, username, email)
                 self.num_records += 1
@@ -40,6 +40,7 @@ class Node:
                 self.__split_last_leaf_and_insert(email, pk, username)
             else:
                 self.__find_and_split_subtree_inserting(email, pk, subtree_key_to_insert, username)
+            self.num_records += 1
 
     def update_username(self, key, new_username):
         self.__find_record(key)[USERNAME] = new_username
@@ -159,7 +160,7 @@ class Node:
         if not is_saved:
             self.curr_records.append([pk, [username, email]])
 
-    def __split_leaf_root(self, pk, username, email):
+    def __split_leaf(self, pk, username, email):
         self.__do_insert(pk, username, email)
         num_records = (self.num_records + 1) // 2
         l_tree = Node(True, False, self, num_records, self.num_page + 1, self.curr_records[:num_records],
@@ -170,7 +171,7 @@ class Node:
         self.__last_leaf = [r_tree.fst_key(), r_tree]
         self.is_leaf = False
         self.curr_records = []
-        self.num_records = 0
+        self.num_records = 2
 
     # PRIVATE ACCESSING
 
