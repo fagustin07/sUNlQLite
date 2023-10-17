@@ -1,28 +1,25 @@
+from btree.nodes import NodeInstanciator
 from btree.node_encoder import NodeEncoder
-from btree.node_instanciator import NodeInstanciator
 from utils.file_manager import FileManager
 
 
 class Pager:
 
-    def __init__(self, filename):
-        self.__file_manager = FileManager(filename)
-        if self.__file_manager.file_size() == 0:
-            self.pages = NodeInstanciator().create_tree()
+    def __init__(self, filename, table_name):
+        file_manager = FileManager(filename, NodeEncoder())
+        if file_manager.file_size() == 0:
+            self.pages = NodeInstanciator(file_manager).create_tree()
         else:
-            self.pages = NodeInstanciator().init_tree(self.__file_manager.file())
+            self.pages = NodeInstanciator(file_manager).init_tree()
 
     def metadata(self):
-        return self.pages.count_pages(), self.pages.count_records()
+        return self.pages.count_metadata()
 
     def get_page(self, i):
         return self.pages.obtain(i)
 
-    def page_to_write(self):
-        return self.pages
-
-    def commit(self):
-        self.__file_manager.commit(NodeEncoder().do(self.pages))
+    def insert(self, pk, username, email):
+        self.pages = self.pages.insert(pk, username, email)
 
     @staticmethod
     def __page_size():

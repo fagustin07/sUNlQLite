@@ -1,12 +1,9 @@
-from btree.node import USERNAME, EMAIL
-
-
 class Encoder:
     @staticmethod
     def do(record_kv):
         pk = record_kv[0]
-        username = record_kv[1][USERNAME]
-        email = record_kv[1][EMAIL]
+        username = record_kv[1][0]
+        email = record_kv[1][1]
         codified_record = bytearray(295)
 
         key_record_bytes = pk.to_bytes(4, byteorder='big')

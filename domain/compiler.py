@@ -3,7 +3,7 @@ from commands.command_enum import EnumCommand
 from commands.command_validator import CommandValidator
 from commands.exit import Exit
 from commands.insert import Insert
-from exceptions.invalid_command import InvalidCommand
+from commands.invalid_command import InvalidCommand
 from commands.metadata import Metadata
 from commands.select import Select
 

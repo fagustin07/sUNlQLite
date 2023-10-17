@@ -7,7 +7,7 @@ EMAIL = 1
 
 
 class Node:
-    def __init__(self, is_leaf, is_root, parent, num_records, num_page, records, max_records=13):
+    def __init__(self, is_leaf, is_root, parent, num_records, num_page, records, file_manager, node_seq, max_records=13):
         self.is_leaf = is_leaf
         self.is_root = is_root
         self.parent = parent
@@ -17,6 +17,8 @@ class Node:
         self.subtrees: dict = {}  # TODO: persistir nueva data
         self.__max_records_amount = max_records
         self.__last_leaf = None
+        self.__file_manager = file_manager
+        self.__node_seq = node_seq
 
     # ACTIONS
 
@@ -33,6 +35,7 @@ class Node:
             else:
                 self.__do_insert(pk, username, email)
                 self.num_records += 1
+                self.__file_manager.save(self)
         else:
             subtree_key_to_insert = self.__find_subtree_key_can_contain(pk)
             not_exist_tree = subtree_key_to_insert is None
@@ -61,7 +64,7 @@ class Node:
         num_records = (self.num_records + 1) // 2 if (self.num_records + 1) // 2 > 0 else 1
         l_tree = Node(True, False, self.parent, num_records, self.num_page, self.curr_records[:num_records],
                       self.__max_records_amount)
-        r_tree = Node(True, False, self.parent, num_records, self.num_page + 1, self.curr_records[num_records:],
+        r_tree = Node(True, False, self.parent, num_records, self.__file_manager.next_num_page(), self.curr_records[num_records:],
                       self.__max_records_amount)
         return l_tree, r_tree
 
@@ -80,7 +83,7 @@ class Node:
         self.__find_record(key)
         return key
 
-    def obtain(self, i):
+    def obtain(self, i): # todo: que retorne la pagina i
         return self
 
     def data(self):
@@ -89,7 +92,7 @@ class Node:
                 map(lambda record_kv: [record_kv[0], record_kv[1][USERNAME], record_kv[1][EMAIL]], self.curr_records))
         else:
             records = []
-            for list_of_records in list(map(lambda node: node.data(), self.nodes_subtrees())):
+            for list_of_records in list(map(lambda node: node.select_all(), self.nodes_subtrees())):
                 for record in list_of_records:
                     records.append(record)
             return records
@@ -147,6 +150,9 @@ class Node:
             l_tree, r_tree = subtree_to_insert.insert_and_split_for_parent(pk, username, email)
             self.subtrees[l_tree.last_key()] = l_tree
             self.__last_leaf = [r_tree.fst_key(), r_tree]
+            self.__file_manager.save(self)
+            self.__file_manager.save(l_tree)
+            self.__file_manager.save(r_tree)
 
     def __do_insert(self, pk, username, email):
         is_saved = False
@@ -172,6 +178,9 @@ class Node:
         self.is_leaf = False
         self.curr_records = []
         self.num_records = 2
+        self.__file_manager.save(self)
+        self.__file_manager.save(l_tree)
+        self.__file_manager.save(r_tree)
 
     # PRIVATE ACCESSING
 

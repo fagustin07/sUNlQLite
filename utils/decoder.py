@@ -11,6 +11,12 @@ class Decoder:
         return [pk, [user, email]]
 
     @staticmethod
+    def decode_num_four_bytes(num_bytes):
+        num_list_bytes = list(num_bytes)
+        curr_num = int.from_bytes(num_list_bytes, byteorder='big')
+        return curr_num
+
+    @staticmethod
     def bytes_to_string(desired_bytes):
         return ''.join(char for char in desired_bytes.decode('ascii', errors='ignore') if char != '\0')
 

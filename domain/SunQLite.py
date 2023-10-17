@@ -40,7 +40,6 @@ class SunQLite:
             print(record[0], record[1], record[2])
 
     def finish(self):
-        self.table.commit()
         self.keep_running = False
 
     def metadata(self):

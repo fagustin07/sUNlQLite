@@ -1,25 +1,19 @@
 class FileManager:
 
-    def __init__(self, filename):
+    def __init__(self, filename, node_encoder):
         self.filename = filename
+        self.__node_encoder = node_encoder
 
-    def get_metadata(self):
+    def save(self, node):
+        with open(self.filename, 'r+b') as file:
+            file.seek(node.num_page*4096)
+            file.write(self.__node_encoder.do(node))
+
+    def next_num_page(self):
         with open(self.filename, 'rb') as file:
-            data = file.read()
-            file_size = len(data)
-            if file_size == 0:
-                return 1, 0
+            return len(file.read()) // 4096
 
-            tuple_amount_pages_records = divmod(file_size, 4096)
-            if tuple_amount_pages_records[1] == 0:
-                amount_pages = tuple_amount_pages_records[0]
-                amount_records = amount_pages * 14
-            else:
-                amount_pages = tuple_amount_pages_records[0] + 1
-                amount_records = tuple_amount_pages_records[0] * 14 + divmod(tuple_amount_pages_records[1], 291)[0]
-        return amount_pages, amount_records
-
-    def get_data(self, since, to):
+    def get_bytes(self, since, to):
         with open(self.filename, 'rb') as file:
             bytedata = bytearray(file.read())
             return bytedata[since:to]
