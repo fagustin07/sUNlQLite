@@ -120,7 +120,6 @@ class TestBTreeSplitLeaf(TestCase):
         self.assertEqual(14, len(curr_lista))
         self.assertEqual(lista_unida_esperada, curr_lista)
 
-
     def test010_se_puede_obtener_la_cantidad_de_registros_de_un_btree(self):
         lista_unida_esperada = []
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')

@@ -115,8 +115,8 @@ class Internal(AbstractNode):
         if self.__num_keys == self.max_num_rec:
             raise PageFullException()
 
-        subtree_kv = self.__find_subtree_can_contain(pk)
-        not_exist_tree = subtree_kv is None
+        subtree_num_page = self.__find_subtree_can_contain(pk)
+        not_exist_tree = subtree_num_page is None
         if not_exist_tree:
             subtree_to_insert = self.__node_caller.seek_node(self.__right_child)
             if subtree_to_insert.can_insert():
@@ -132,7 +132,7 @@ class Internal(AbstractNode):
                 self.file_manager.save(l_tree)
                 self.file_manager.save(r_tree)
         else:
-            subtree_to_insert = self.__node_caller.seek_node(subtree_kv[0])
+            subtree_to_insert = self.__node_caller.seek_node(subtree_num_page)
             if subtree_to_insert.can_insert():
                 subtree_to_insert.insert(pk, username, email)
                 self.file_manager.save(subtree_to_insert)
@@ -193,8 +193,24 @@ class Internal(AbstractNode):
     def insert_and_split_for_parent(self, pk, username, email):
         raise MethodNotImplemented()
 
-    def __find_subtree_can_contain(self, pk):  # todo: hacerlo busqueda binaria
-        return next(filter(lambda subtree_kv: pk <= subtree_kv[0], list(self.__children.items())), None)
+    def __find_subtree_can_contain(self, pk):
+        keys = list(self.__children.keys())
+        low, high = 0, len(keys) - 1
+        mid = None
+        while low <= high:
+            mid = (low + high) // 2
+            mid_key = keys[mid]
+            if mid_key == pk:
+                return mid_key
+
+            if mid_key < pk:
+                low = mid + 1
+            else:
+                high = mid - 1
+        if low == len(keys) and pk > keys[-1]:
+            return None
+        else:
+            return self.__children[keys[mid]]
 
 
 ##############################################################################################################
