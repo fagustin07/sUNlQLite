@@ -18,19 +18,16 @@ class Leaf(AbstractNode):
     # ACTIONS
 
     def insert(self, pk, username, email):
-        if self.contains(pk):
-            raise DuplicateKeyException()
-
         if self.num_records == self.max_num_rec:
             return self.__split_leaf(pk, username, email)
         else:
-            self.__do_insert(pk, username, email)
+            self.__do_binary_insert(pk, username, email)
             self.num_records += 1
             self.file_manager.save(self)
             return self
 
     def insert_and_split_for_parent(self, pk, username, email):
-        self.__do_insert(pk, username, email)
+        self.__do_binary_insert(pk, username, email)
         num_records = (self.num_records + 1) // 2 if (self.num_records + 1) // 2 > 0 else 1
         l_tree = Leaf(False, self.parent, num_records, self.records[:num_records],
                       self.num_page, self.file_manager, self.max_num_rec)
@@ -60,7 +57,7 @@ class Leaf(AbstractNode):
     # PRIVATE ACTIONS
 
     def __split_leaf(self, pk, username, email):
-        self.__do_insert(pk, username, email)
+        self.__do_binary_insert(pk, username, email)
         num_records = (self.num_records + 1) // 2
 
         l_tree = Leaf(False, self.num_page, num_records, self.records[:num_records],
@@ -79,23 +76,31 @@ class Leaf(AbstractNode):
 
         return base_node
 
-    def __do_insert(self, pk, username, email):
-        is_saved = False
-        curr_record_index = 0
-
-        while not is_saved and curr_record_index < self.num_records:
-            if pk < self.records[curr_record_index][0]:
-                self.records.insert(curr_record_index, [pk, [username, email]])
-                is_saved = True
-            curr_record_index += 1
-        if not is_saved:
-            self.records.append([pk, [username, email]])
+    def __do_binary_insert(self, pk, username, email):
+        left, right = 0, len(self.records) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if self.records[mid][0] == pk:
+                raise DuplicateKeyException()
+            elif self.records[mid][0] < pk:
+                left = mid + 1
+            else:
+                right = mid - 1
+        self.records.insert(left, [pk, [username, email]])
 
     # PRIVATE TESTING
 
-    def contains(self, key):
-        return any(record[0] == key for record in self.records)
-
+    def __binary_contains(self, key):
+        left, right = 0, len(self.records) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if self.records[mid][0] == key:
+                return True
+            elif self.records[mid][0] < key:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return False
 
 ##############################################################################################################
 
