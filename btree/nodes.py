@@ -115,7 +115,7 @@ class Internal(AbstractNode):
         if self.__num_keys == self.max_num_rec:
             raise PageFullException()
 
-        subtree_num_page = self.__find_subtree_can_contain(pk)
+        subtree_key, subtree_num_page = self.__find_subtree_can_contain(pk)
         not_exist_tree = subtree_num_page is None
         if not_exist_tree:
             subtree_to_insert = self.__node_caller.seek_node(self.__right_child)
@@ -138,7 +138,7 @@ class Internal(AbstractNode):
                 self.file_manager.save(subtree_to_insert)
             else:
                 l_tree, r_tree = subtree_to_insert.insert_and_split_for_parent(pk, username, email)
-                del self.__children[subtree_to_insert.last_key_record()]
+                del self.__children[subtree_key]
                 self.__children[l_tree.last_key_record()] = l_tree.num_page
                 self.__children[r_tree.last_key_record()] = r_tree.num_page
                 self.__children = dict(sorted(self.__children.items()))
@@ -208,9 +208,9 @@ class Internal(AbstractNode):
             else:
                 high = mid - 1
         if low == len(keys) and pk > keys[-1]:
-            return None
+            return None, None
         else:
-            return self.__children[keys[mid]]
+            return keys[mid], self.__children[keys[mid]]
 
 
 ##############################################################################################################

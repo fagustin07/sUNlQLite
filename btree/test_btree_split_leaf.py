@@ -1,8 +1,10 @@
 import os
+import random
 from unittest import TestCase
 
 from btree.node_encoder import NodeEncoder
 from btree.nodes import NodeInstanciator, Leaf, Internal
+from exceptions.duplicate_key import DuplicateKeyException
 from exceptions.page_full import PageFullException
 from utils.file_manager import FileManager
 
@@ -37,7 +39,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             x += 1
 
         saved_node = self.node_inst.seek_node(0)
@@ -48,7 +50,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             x += 1
         root = self.node_inst.seek_node(0)
         r_node = self.node_inst.seek_node(root.right_child())
@@ -59,7 +61,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             x += 1
         root = self.node_inst.seek_node(0)
 
@@ -68,7 +70,6 @@ class TestBTreeSplitLeaf(TestCase):
         self.assertTrue(left.is_leaf)
 
     def test007_se_splitean_hijos_de_un_nodo_interno_y_todos_sus_hijos_siguen_siendo_hojas(self):
-        self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 31:
             self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
@@ -86,7 +87,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             lista_unida_esperada.append([x, 'chester', 'fede@sandoval.com'])
             x += 1
         lista_unida_esperada.append([60, 'chester', 'fede@sandoval.com'])
@@ -108,7 +109,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             lista_unida_esperada.append([x, 'chester', 'fede@sandoval.com'])
             x += 1
         lista_unida_esperada.append([60, 'chester', 'fede@sandoval.com'])
@@ -125,7 +126,7 @@ class TestBTreeSplitLeaf(TestCase):
         self.leaf.insert(60, 'chester', 'fede@sandoval.com')
         x = 1
         while x < 14:
-            self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             lista_unida_esperada.append([x, 'chester', 'fede@sandoval.com'])
             x += 1
         lista_unida_esperada.append([60, 'chester', 'fede@sandoval.com'])
@@ -142,6 +143,38 @@ class TestBTreeSplitLeaf(TestCase):
 
         with self.assertRaises(PageFullException):
             self.leaf.insert(1, 'f', 'd')
+
+    def test012_se_levanta_una_excepcion_si_insertamos_un_dato_con_clave_existente(self):
+        x = 1
+        while x < 107:
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+            x += 1
+
+        root = self.node_inst.seek_node(0)
+
+        with self.assertRaises(DuplicateKeyException):
+            root.insert(80, 'f', 'd')
+
+    def test013_un_btree_puede_insertar_datos_desordenados_pero_siempre_tendra_ordenadas_las_claves_de_sus_hojas(self):
+        min = 1
+        max = 345
+        unique_nums = max - min + 1
+        lista_numeros_unicos = random.sample(range(min, max + 1), unique_nums)
+        random.shuffle(lista_numeros_unicos)
+
+        for x in lista_numeros_unicos:
+            self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
+
+        root: Internal = self.node_inst.seek_node(0)
+
+        self.assertTrue(self.esta_ordenada(list(root.children())))
+
+    @staticmethod
+    def esta_ordenada(lista):
+        for i in range(len(lista) - 1):
+            if lista[i] > lista[i + 1]:
+                return False
+        return True
 
     def tearDown(self):
         os.remove(self.__file_name_test)
