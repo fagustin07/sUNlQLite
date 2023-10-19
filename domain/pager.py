@@ -1,4 +1,4 @@
-from btree.nodes import NodeInstanciator
+from btree.nodes import NodeDecoder
 from btree.node_encoder import NodeEncoder
 from utils.file_manager import FileManager
 
@@ -8,9 +8,9 @@ class Pager:
     def __init__(self, filename, table_name):
         file_manager = FileManager(filename, NodeEncoder())
         if file_manager.file_size() == 0:
-            self.pages = NodeInstanciator(file_manager).create_tree()
+            self.pages = NodeDecoder(file_manager).create_tree()
         else:
-            self.pages = NodeInstanciator(file_manager).init_tree()
+            self.pages = NodeDecoder(file_manager).init_tree()
 
     def metadata(self):
         return self.pages.count_metadata()

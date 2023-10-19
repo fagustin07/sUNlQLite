@@ -3,7 +3,7 @@ import random
 from unittest import TestCase
 
 from btree.node_encoder import NodeEncoder
-from btree.nodes import NodeInstanciator, Leaf, Internal
+from btree.nodes import NodeDecoder, Leaf, Internal
 from exceptions.duplicate_key import DuplicateKeyException
 from exceptions.page_full import PageFullException
 from utils.file_manager import FileManager
@@ -17,7 +17,7 @@ class TestBTreeSplitLeaf(TestCase):
             pass
         self.node_encoder = NodeEncoder()
         self.file_manager = FileManager(self.__file_name_test, self.node_encoder)
-        self.node_inst = NodeInstanciator(self.file_manager)
+        self.node_inst = NodeDecoder(self.file_manager)
         self.leaf = self.node_inst.create_tree()
         self.file_manager.save(self.leaf)
 

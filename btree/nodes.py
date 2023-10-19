@@ -51,9 +51,6 @@ class Leaf(AbstractNode):
     def can_insert(self):
         return self.num_records < self.max_num_rec
 
-    def is_page_leaf(self):
-        return True
-
     # PRIVATE ACTIONS
 
     def __split_leaf(self, pk, username, email):
@@ -112,7 +109,7 @@ class Internal(AbstractNode):
         self.__num_keys = num_keys
         self.__children = children
         self.__right_child = right_child
-        self.__node_caller = NodeInstanciator(file_manager)
+        self.__node_caller = NodeDecoder(file_manager)
 
     # ACTIONS
 
@@ -221,7 +218,7 @@ class Internal(AbstractNode):
 ##############################################################################################################
 
 
-class NodeInstanciator:
+class NodeDecoder:
 
     def __init__(self, file_manager):
         self.__decoder = Decoder()
