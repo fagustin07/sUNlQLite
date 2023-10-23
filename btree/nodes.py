@@ -63,13 +63,11 @@ class Leaf(AbstractNode):
 
         r_tree = Leaf(False, self.num_page, num_records, self.records[num_records:],
                       self.file_manager.next_num_page(), self.file_manager, self.max_num_rec)
-        self.file_manager.save(r_tree)
 
         base_node = Internal(self.is_root, self.parent, 1,
                              dict({l_tree.last_key_record(): l_tree.num_page}),
                              r_tree.num_page, self.num_page, self.file_manager, 510)
-
-        self.file_manager.save(base_node)
+        self.file_manager.save(r_tree, base_node)
 
         return base_node
 
@@ -130,9 +128,7 @@ class Internal(AbstractNode):
                 self.__right_child = r_tree.num_page
                 self.__num_keys += 1
 
-                self.file_manager.save(self)
-                self.file_manager.save(l_tree)
-                self.file_manager.save(r_tree)
+                self.file_manager.save(self, l_tree, r_tree)
         else:
             subtree_to_insert = self.__node_caller.seek_node(subtree_num_page)
             if subtree_to_insert.can_insert():
@@ -146,10 +142,7 @@ class Internal(AbstractNode):
                 self.__children = dict(sorted(self.__children.items()))
                 self.__num_keys += 1
 
-                self.file_manager.save(self)
-                self.file_manager.save(l_tree)
-                self.file_manager.save(r_tree)
-
+                self.file_manager.save(self, l_tree, r_tree)
         return self
 
     # ACCESSING

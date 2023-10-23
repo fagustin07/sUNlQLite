@@ -4,10 +4,10 @@ class FileManager:
         self.filename = filename
         self.__node_encoder = node_encoder
 
-    def save(self, node):
+    def save(self, *nodes):
         with open(self.filename, 'r+b') as file:
-            file.seek(node.num_page*4096)
-            file.write(self.__node_encoder.do(node))
+            for node in nodes:
+                self.__save(node, file)
 
     def next_num_page(self):
         with open(self.filename, 'rb') as file:
@@ -32,3 +32,9 @@ class FileManager:
         with open(self.filename, 'rb') as file:
             bytedata = bytearray(file.read())
             return bytedata
+
+    # PRIVATE ACTIONS
+
+    def __save(self, node, file):
+        file.seek(node.num_page*4096)
+        file.write(self.__node_encoder.do(node))
