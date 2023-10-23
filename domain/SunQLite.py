@@ -1,3 +1,5 @@
+import os
+
 from domain.compiler import Compiler
 from domain.table import Table
 from exceptions.duplicate_key import DuplicateKeyException
@@ -41,6 +43,13 @@ class SunQLite:
 
     def finish(self):
         self.keep_running = False
+
+    @staticmethod
+    def clear_console():
+        if os.name == 'nt':
+            os.system('cls')
+        else:
+            os.system('clear')
 
     def metadata(self):
         metadata = self.table.metadata()

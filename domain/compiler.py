@@ -1,4 +1,5 @@
 from commands.blank import Blank
+from commands.clear import Clear
 from commands.command_enum import EnumCommand
 from commands.command_validator import CommandValidator
 from commands.exit import Exit
@@ -37,5 +38,7 @@ class Compiler:
             return Metadata()
         elif command_string == EnumCommand.BLANK.value:
             return Blank()
+        elif command_string == EnumCommand.CLEAR.value:
+            return Clear()
         else:
             return InvalidCommand()

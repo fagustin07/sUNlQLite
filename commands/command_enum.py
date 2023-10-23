@@ -12,3 +12,4 @@ class EnumCommand(Enum):
 
     BLANK = ""
     EXCEPTION = "EXCEPTION"
+    CLEAR = "CLS"
