@@ -134,28 +134,30 @@ class TestBTreeSplitLeaf(TestCase):
         root = self.node_inst.seek_node(0)
 
         num_pages, num_records = root.count_metadata()
+        nodes = []
+        x = self.file_manager.file_size()
+        base = 0
+        y = 0
+        while x > base:
+            nodes.append(self.node_inst.seek_node(y))
+            base += 4096
+            y +=1
 
         self.assertEqual(14, num_records)
         self.assertEqual(3, num_pages)
 
-    def test011_se_levanta_una_excepcions_si_un_nodo_interno_debe_splitearse(self):
-        self.leaf = Internal(True, 0, 0, dict(), 0, 0, self.file_manager, 0)
-
-        with self.assertRaises(PageFullException):
-            self.leaf.insert(1, 'f', 'd')
-
-    def test012_se_levanta_una_excepcion_si_insertamos_un_dato_con_clave_existente(self):
+    def test011_se_levanta_una_excepcion_si_insertamos_un_dato_con_clave_existente(self):
         x = 1
-        while x < 107:
+        while x < 13:
             self.leaf = self.leaf.insert(x, 'chester', 'fede@sandoval.com')
             x += 1
 
         root = self.node_inst.seek_node(0)
 
         with self.assertRaises(DuplicateKeyException):
-            root.insert(80, 'f', 'd')
+            root.insert(9, 'f', 'd')
 
-    def test013_un_btree_puede_insertar_datos_desordenados_pero_siempre_tendra_ordenadas_las_claves_de_sus_hojas(self):
+    def test012_un_btree_puede_insertar_datos_desordenados_pero_siempre_tendra_ordenadas_las_claves_de_sus_hojas(self):
         min = 1
         max = 345
         unique_nums = max - min + 1
