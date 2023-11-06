@@ -1,3 +1,5 @@
+import bisect
+
 from btree.abstract_node import AbstractNode
 from exceptions.duplicate_key import DuplicateKeyException
 from utils.decoder import Decoder
@@ -26,15 +28,16 @@ class Leaf(AbstractNode):
 
     def insert_and_split_for_parent(self, pk, username, email):
         self.__do_binary_insert(pk, username, email)
-        num_records = (self.num_records + 1) // 2 if (self.num_records + 1) // 2 > 0 else 1
-        l_tree = Leaf(False, self.parent, num_records, self.records[:num_records],
+        num_records = (self.num_records + 1) // 2
+        l_records = self.records[:num_records]
+        r_records = self.records[num_records:]
+        l_tree = Leaf(False, self.parent, len(l_records), l_records,
                       self.num_page, self.file_manager, self.node_caller)
-        r_tree = Leaf(False, self.parent, num_records, self.records[num_records:],
+        r_tree = Leaf(False, self.parent, len(r_records), r_records,
                       self.file_manager.next_num_page(), self.file_manager, self.node_caller)
 
         parent: Internal = self.node_caller.seek_node(self.parent)
         parent.check_internal_split(self, l_tree, r_tree)
-
 
     # ACCESSING
 
@@ -58,11 +61,13 @@ class Leaf(AbstractNode):
         self.__do_binary_insert(pk, username, email)
         num_records = (self.num_records + 1) // 2
 
-        l_tree = Leaf(False, self.num_page, num_records, self.records[:num_records],
+        l_records = self.records[:num_records]
+        r_records = self.records[num_records:]
+        l_tree = Leaf(False, self.num_page, len(l_records), l_records,
                       self.file_manager.next_num_page(), self.file_manager, self.node_caller.max_num_records())
         self.file_manager.save(l_tree)
 
-        r_tree = Leaf(False, self.num_page, num_records, self.records[num_records:],
+        r_tree = Leaf(False, self.num_page, len(r_records), r_records,
                       self.file_manager.next_num_page(), self.file_manager, self.node_caller.max_num_records())
 
         base_node = Internal(self.is_root, self.parent, 1,
@@ -74,16 +79,21 @@ class Leaf(AbstractNode):
         return base_node
 
     def __do_binary_insert(self, pk, username, email):
-        left, right = 0, len(self.records) - 1
-        while left <= right:
-            mid = (left + right) // 2
-            if self.records[mid][0] == pk:
+        clave_nuevo_registro = pk
+
+        # Búsqueda binaria para encontrar la posición
+        izquierda, derecha = 0, len(self.records) - 1
+        while izquierda <= derecha:
+            medio = (izquierda + derecha) // 2
+            clave_actual = self.records[medio][0]
+
+            if clave_actual == clave_nuevo_registro:
                 raise DuplicateKeyException()
-            elif self.records[mid][0] < pk:
-                left = mid + 1
+            elif clave_actual < clave_nuevo_registro:
+                izquierda = medio + 1
             else:
-                right = mid - 1
-        self.records.insert(left, [pk, [username, email]])
+                derecha = medio - 1
+        self.records.insert(izquierda, [pk, [username, email]])
 
     # PRIVATE TESTING
 
@@ -136,16 +146,34 @@ class Internal(AbstractNode):
 
         return self.node_caller.seek_node(0)
 
-    def select_all(self):
-        records = []
-        children1 = list(self.__children.keys())
-        children = list(self.__children.values())
-        children.append(self.__right_child)
+    def check_internal_split(self, old_child, l_tree, r_tree):
+        key = None
+        for k, v in self.__children.items():
+            if v == old_child.num_page:
+                key = k
+                break
+        if key is None:
+            self.__children[l_tree.last_key_record()] = l_tree.num_page
+            self.__right_child = r_tree.num_page
+            self.__children = dict(sorted(self.__children.items()))
+        else:
+            del self.__children[key]
+            self.__children[l_tree.last_key_record()] = l_tree.num_page
+            self.__children[r_tree.last_key_record()] = r_tree.num_page
+            self.__children = dict(sorted(self.__children.items()))
 
-        for num_child_page in children:
-            child = self.node_caller.seek_node(num_child_page)
-            records.extend(child.select_all())
-        return sorted(records)
+        self.__num_keys += 1
+        self.file_manager.save(l_tree, r_tree)
+        if self.__num_keys == self.node_caller.max_num_pages():
+            right_child = self.node_caller.seek_node(self.__right_child)
+            self.__children[right_child.last_key_record()] = right_child.num_page
+            self.__num_keys += 1
+            if self.is_root:
+                self.__split_internal_root()
+            else:
+                self.__split_internals_parent()
+        else:
+            self.file_manager.save(self)
 
     def change_children_pointer(self):
         childrens = list(self.__children.values())
@@ -154,83 +182,15 @@ class Internal(AbstractNode):
             page = self.node_caller.seek_node(num_page)
             page.change_parent_to(self)
 
-    # ACCESSING
-
-    def num_keys(self):
-        return self.__num_keys
-
-    def can_insert(self, pk):
-        _, subtree_num_page = self.search_subtree_can_contain(pk)
-        if subtree_num_page is None:
-            node = self.find_far_right_child()
-            return node.can_insert(pk)
-        else:
-            return self.node_caller.seek_node(subtree_num_page).can_insert(pk)
-
-    def count_metadata(self):
-        num_records = 0
-        num_pages = 1
+    def select_all(self):
+        records = []
         children = list(self.__children.values())
         children.append(self.__right_child)
 
         for num_child_page in children:
             child = self.node_caller.seek_node(num_child_page)
-            curr_num_pages, curr_num_rec = child.count_metadata()
-            num_records += curr_num_rec
-            num_pages += curr_num_pages
-
-        return num_pages, num_records
-
-    def right_child(self):
-        return self.__right_child
-
-    def children(self):
-        return self.__children
-
-    # PRIVATE ACCESSING
-
-    def find_subtree_can_contain(self, pk):
-        keys = list(self.__children.keys())
-        low, high = 0, len(keys) - 1
-        mid = None
-        while low <= high:
-            mid = (low + high) // 2
-            mid_key = keys[mid]
-            if mid_key == pk:
-                return keys[mid], self.__children[keys[mid]]
-
-            if mid_key < pk:
-                low = mid + 1
-            else:
-                high = mid - 1
-        if low == len(keys) and pk > keys[-1]:
-            return None, None
-        else:
-            return keys[mid], self.__children[keys[mid]]
-
-    # PRIVATE ACTIONS
-
-    def __split_dicts(self):
-        claves = list(self.__children.keys())
-        valores = list(self.__children.values())
-
-        # Indice
-        punto_medio = len(claves) // 2
-
-        # Divido las listas en dos partes
-        claves_1 = claves[:punto_medio]
-        valores_1 = valores[:punto_medio]
-        claves_2 = claves[punto_medio:]
-        valores_2 = valores[punto_medio:]
-
-        # Creo dos nuevos diccionarios
-        diccionario_1 = {clave: valor for clave, valor in zip(claves_1, valores_1)}
-        diccionario_2 = {clave: valor for clave, valor in zip(claves_2, valores_2)}
-
-        left_new_ref, right_new_ref = claves_1[-1], claves_2[-1]
-        left_last_page, right_last_page = valores_1[-1], valores_2[-1]
-
-        return diccionario_1, diccionario_2, left_new_ref, right_new_ref, left_last_page, right_last_page, len(claves_1), len(claves_2)
+            records.extend(child.select_all())
+        return records
 
     def change_splitted_child_reference(self, old_child, l_child, r_child, left_ref, right_ref):
         key = None
@@ -254,74 +214,42 @@ class Internal(AbstractNode):
             if self.is_root:
                 self.__split_internal_root()
             else:
-                # continuo subiendo en el arbol ya que no soy root y un padre puede que necesite splitearse
                 self.__split_internals_parent()
         else:
             self.file_manager.save(self)
 
-    def check_internal_split(self, old_child, l_tree, r_tree):
-        key = None
-        for k, v in self.__children.items():
-            if v == old_child.num_page:
-                key = k
-                break
-        if key is None:
-            self.__children[l_tree.last_key_record()] = l_tree.num_page
-            self.__right_child = r_tree.num_page
+    # ACCESSING
+
+    def can_insert(self, pk):
+        _, subtree_num_page = self.search_subtree_can_contain(pk)
+        if subtree_num_page is None:
+            node = self.node_caller.seek_node(self.__right_child).can_insert(pk)
+            return node.can_insert(pk)
         else:
-            del self.__children[key]
-            self.__children[l_tree.last_key_record()] = l_tree.num_page
-            self.__children[r_tree.last_key_record()] = r_tree.num_page
-            self.__children = dict(sorted(self.__children.items()))
+            return self.node_caller.seek_node(subtree_num_page).can_insert(pk)
 
-        self.__num_keys += 1
-        self.file_manager.save(l_tree, r_tree)
-        if self.__num_keys == self.node_caller.max_num_pages():
-            right_child = self.node_caller.seek_node(self.__right_child)
-            self.__children[right_child.last_key_record()] = right_child.num_page
-            self.__num_keys += 1
-            if self.is_root:
-                self.__split_internal_root()
-            else:
-                self.__split_internals_parent()
-        else:
-            self.file_manager.save(self)
+    def count_metadata(self):
+        num_records = 0
+        num_pages = 1
+        children = list(self.__children.values())
+        children.append(self.__right_child)
 
-    def __split_internal_root(self):
-        dict_left, dict_right, left_ref, right_ref, l_page, r_page, l_size, r_size = self.__split_dicts()
-        del dict_left[left_ref]
-        del dict_right[right_ref]
-        l_child = Internal(False, self.num_page, l_size-1, dict_left, l_page,
-                           self.file_manager.next_num_page(),
-                           self.file_manager, self.node_caller)
-        self.file_manager.save(l_child)
-        r_child = Internal(False, self.num_page, r_size - 1, dict_right, r_page,
-                           self.file_manager.next_num_page(),
-                           self.file_manager, self.node_caller)
-        self.file_manager.save(r_child)
-        self.__num_keys = 1
-        self.__children = dict({left_ref: l_child.num_page})
-        self.__right_child = r_child.num_page
-        l_child.change_children_pointer()
-        r_child.change_children_pointer()
-        self.file_manager.save(self)
+        for num_child_page in children:
+            child = self.node_caller.seek_node(num_child_page)
+            curr_num_pages, curr_num_rec = child.count_metadata()
+            num_records += curr_num_rec
+            num_pages += curr_num_pages
 
-    def __split_internals_parent(self):
-        dict_left, dict_right, left_ref, right_ref, l_page, r_page, l_size, r_size = self.__split_dicts()
-        del dict_left[left_ref]
-        del dict_right[right_ref]
-        l_child = Internal(False, self.parent, l_size-1, dict_left, l_page,
-                           self.num_page,
-                           self.file_manager, self.node_caller)
-        self.file_manager.save(l_child)
-        r_child = Internal(False, self.parent, r_size-1, dict_right, r_page,
-                           self.file_manager.next_num_page(),
-                           self.file_manager, self.node_caller)
-        self.file_manager.save(r_child)
-        l_child.change_children_pointer()
-        r_child.change_children_pointer()
-        parent_node: Internal = self.node_caller.seek_node(self.parent)
-        parent_node.change_splitted_child_reference(self, l_child, r_child, left_ref, right_ref)
+        return num_pages, num_records
+
+    def num_keys(self):
+        return self.__num_keys
+
+    def right_child(self):
+        return self.__right_child
+
+    def children(self):
+        return self.__children
 
     def search_subtree_can_contain(self, pk):
         subtree_key, subtree_num_page = self.find_subtree_can_contain(pk)
@@ -337,13 +265,6 @@ class Internal(AbstractNode):
                 return subtree_key, subtree_num_page
             else:
                 return node.search_subtree_can_contain(pk)
-
-    def find_far_right_child(self):
-        node = self.node_caller.seek_node(self.right_child())
-        if node.is_leaf:
-            return node
-        else:
-            return node.find_far_right_child()
 
     def find_right_child_can_contain(self, pk):
         node = self.node_caller.seek_node(self.right_child())
@@ -364,6 +285,77 @@ class Internal(AbstractNode):
                 else:
                     return new_node.find_right_child_can_contain(pk)
 
+    # PRIVATE ACCESSING
+
+    def find_subtree_can_contain(self, pk):
+        keys = list(self.__children.keys())
+        index = bisect.bisect_left(keys, pk)
+
+        if index < len(keys) and keys[index] == pk:
+            raise DuplicateKeyException()
+        elif index < len(keys):
+            return keys[index], self.__children[keys[index]]
+        else:
+            return None, None
+
+    # PRIVATE ACTIONS
+
+    def __split_dicts(self):
+        sort = dict(sorted(self.__children.items()))
+        claves = list(sort.keys())
+        valores = list(sort.values())
+
+        punto_medio = len(claves) // 2
+
+        claves_1 = claves[:punto_medio]
+        valores_1 = valores[:punto_medio]
+        claves_2 = claves[punto_medio:]
+        valores_2 = valores[punto_medio:]
+
+        diccionario_1 = {clave: valor for clave, valor in zip(claves_1, valores_1)}
+        diccionario_2 = {clave: valor for clave, valor in zip(claves_2, valores_2)}
+
+        left_new_ref, right_new_ref = claves_1[-1], claves_2[-1]
+        left_last_page, right_last_page = valores_1[-1], valores_2[-1]
+
+        return diccionario_1, diccionario_2, left_new_ref, right_new_ref, left_last_page, right_last_page, len(
+            claves_1), len(claves_2)
+
+    def __split_internal_root(self):
+        dict_left, dict_right, left_ref, right_ref, l_page, r_page, l_size, r_size = self.__split_dicts()
+        del dict_left[left_ref]
+        del dict_right[right_ref]
+        l_child = Internal(False, self.num_page, l_size - 1, dict_left, l_page,
+                           self.file_manager.next_num_page(),
+                           self.file_manager, self.node_caller)
+        self.file_manager.save(l_child)
+        r_child = Internal(False, self.num_page, r_size - 1, dict_right, r_page,
+                           self.file_manager.next_num_page(),
+                           self.file_manager, self.node_caller)
+        self.file_manager.save(r_child)
+        self.__num_keys = 1
+        self.__children = dict({left_ref: l_child.num_page})
+        self.__right_child = r_child.num_page
+        l_child.change_children_pointer()
+        r_child.change_children_pointer()
+        self.file_manager.save(self)
+
+    def __split_internals_parent(self):
+        dict_left, dict_right, left_ref, right_ref, l_page, r_page, l_size, r_size = self.__split_dicts()
+        del dict_left[left_ref]
+        del dict_right[right_ref]
+        l_child = Internal(False, self.parent, l_size - 1, dict_left, l_page,
+                           self.num_page,
+                           self.file_manager, self.node_caller)
+        self.file_manager.save(l_child)
+        r_child = Internal(False, self.parent, r_size - 1, dict_right, r_page,
+                           self.file_manager.next_num_page(),
+                           self.file_manager, self.node_caller)
+        self.file_manager.save(r_child)
+        l_child.change_children_pointer()
+        r_child.change_children_pointer()
+        parent_node: Internal = self.node_caller.seek_node(self.parent)
+        parent_node.change_splitted_child_reference(self, l_child, r_child, left_ref, right_ref)
 
 ##############################################################################################################
 
@@ -399,7 +391,7 @@ class NodeDecoder:
     def __get_records(self, data_bytes, num_records):
         records = []
         curr_record = 0
-
+        decoder = self.__decoder
         while curr_record < num_records * 295:
             key_start_byte = curr_record
             value_last_byte = key_start_byte + 295
@@ -446,6 +438,6 @@ class NodeDecoder:
             if num_keys > 0:
                 records = self.__get_children_pointers(node_bytes[14:14 + 8 * num_keys], num_keys)
             else:
-                records = []
+                records = {}
 
             return Internal(is_root, parent, num_keys, records, right_child, num_page, self.__file_manager, self)
